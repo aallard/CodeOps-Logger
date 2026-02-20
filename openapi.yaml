@@ -1,0 +1,4115 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8098
+  description: Generated server url
+tags:
+- name: Anomaly Detection
+  description: "Anomaly baselines, checks, and reports"
+- name: Alerts
+  description: "Manage alert channels, rules, and history"
+- name: Dashboards
+  description: "Dashboard CRUD, widget management, templates, and layouts"
+- name: Health
+  description: Public health check endpoint
+- name: Log Ingestion
+  description: Ingest log entries via HTTP push
+- name: Retention
+  description: Data retention policy management and storage monitoring
+- name: Log Traps
+  description: Manage log traps and test definitions
+- name: Log Query
+  description: "Query, search, and manage saved queries"
+- name: Metrics
+  description: "Application metrics registration, data ingestion, and querying"
+- name: Log Sources
+  description: Manage log sources (services)
+- name: Traces
+  description: "Distributed tracing: span ingestion, flow visualization, and analysis"
+paths:
+  /api/v1/logger/traps/{trapId}:
+    get:
+      tags:
+      - Log Traps
+      summary: Get a trap by ID
+      operationId: getTrap
+      parameters:
+      - name: trapId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+    put:
+      tags:
+      - Log Traps
+      summary: Update a trap
+      operationId: updateTrap
+      parameters:
+      - name: trapId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLogTrapRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+    delete:
+      tags:
+      - Log Traps
+      summary: Delete a trap
+      operationId: deleteTrap
+      parameters:
+      - name: trapId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/sources/{sourceId}:
+    get:
+      tags:
+      - Log Sources
+      summary: Get a log source by ID
+      operationId: getSource
+      parameters:
+      - name: sourceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogSourceResponse"
+    put:
+      tags:
+      - Log Sources
+      summary: Update a log source
+      operationId: updateSource
+      parameters:
+      - name: sourceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLogSourceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogSourceResponse"
+    delete:
+      tags:
+      - Log Sources
+      summary: Delete a log source
+      operationId: deleteSource
+      parameters:
+      - name: sourceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/retention/policies/{policyId}:
+    get:
+      tags:
+      - Retention
+      summary: Get a retention policy by ID
+      operationId: getPolicy
+      parameters:
+      - name: policyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+    put:
+      tags:
+      - Retention
+      summary: Update a retention policy
+      operationId: updatePolicy
+      parameters:
+      - name: policyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRetentionPolicyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+    delete:
+      tags:
+      - Retention
+      summary: Delete a retention policy
+      operationId: deletePolicy
+      parameters:
+      - name: policyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/retention/policies/{policyId}/toggle:
+    put:
+      tags:
+      - Retention
+      summary: Toggle a retention policy active/inactive
+      operationId: togglePolicy
+      parameters:
+      - name: policyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: boolean
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+  /api/v1/logger/metrics/{metricId}:
+    get:
+      tags:
+      - Metrics
+      summary: Get a metric by ID
+      operationId: getMetric
+      parameters:
+      - name: metricId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MetricResponse"
+    put:
+      tags:
+      - Metrics
+      summary: Update a metric
+      operationId: updateMetric
+      parameters:
+      - name: metricId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMetricRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MetricResponse"
+    delete:
+      tags:
+      - Metrics
+      summary: Delete a metric
+      operationId: deleteMetric
+      parameters:
+      - name: metricId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/logs/queries/saved/{queryId}:
+    get:
+      tags:
+      - Log Query
+      summary: Get a saved query
+      operationId: getSavedQuery
+      parameters:
+      - name: queryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SavedQueryResponse"
+    put:
+      tags:
+      - Log Query
+      summary: Update a saved query
+      operationId: updateSavedQuery
+      parameters:
+      - name: queryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSavedQueryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SavedQueryResponse"
+    delete:
+      tags:
+      - Log Query
+      summary: Delete a saved query
+      operationId: deleteSavedQuery
+      parameters:
+      - name: queryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/dashboards/{dashboardId}:
+    get:
+      tags:
+      - Dashboards
+      summary: Get a dashboard by ID
+      operationId: getDashboard
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+    put:
+      tags:
+      - Dashboards
+      summary: Update a dashboard
+      operationId: updateDashboard
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDashboardRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+    delete:
+      tags:
+      - Dashboards
+      summary: Delete a dashboard
+      operationId: deleteDashboard
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/dashboards/{dashboardId}/widgets/{widgetId}:
+    put:
+      tags:
+      - Dashboards
+      summary: Update a widget
+      operationId: updateWidget
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: widgetId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDashboardWidgetRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardWidgetResponse"
+    delete:
+      tags:
+      - Dashboards
+      summary: Remove a widget from a dashboard
+      operationId: removeWidget
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: widgetId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/dashboards/{dashboardId}/widgets/reorder:
+    put:
+      tags:
+      - Dashboards
+      summary: Reorder widgets within a dashboard
+      operationId: reorderWidgets
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderWidgetsRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/dashboards/{dashboardId}/layout:
+    put:
+      tags:
+      - Dashboards
+      summary: Update widget layout positions
+      operationId: updateLayout
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLayoutRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/anomalies/baselines/{baselineId}:
+    get:
+      tags:
+      - Anomaly Detection
+      summary: Get a baseline by ID
+      operationId: getBaseline
+      parameters:
+      - name: baselineId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AnomalyBaselineResponse"
+    put:
+      tags:
+      - Anomaly Detection
+      summary: Update a baseline
+      operationId: updateBaseline
+      parameters:
+      - name: baselineId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBaselineRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AnomalyBaselineResponse"
+    delete:
+      tags:
+      - Anomaly Detection
+      summary: Delete a baseline
+      operationId: deleteBaseline
+      parameters:
+      - name: baselineId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/alerts/rules/{ruleId}:
+    get:
+      tags:
+      - Alerts
+      summary: Get an alert rule by ID
+      operationId: getRule
+      parameters:
+      - name: ruleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+    put:
+      tags:
+      - Alerts
+      summary: Update an alert rule
+      operationId: updateRule
+      parameters:
+      - name: ruleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertRuleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+    delete:
+      tags:
+      - Alerts
+      summary: Delete an alert rule
+      operationId: deleteRule
+      parameters:
+      - name: ruleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/alerts/history/{alertId}/status:
+    put:
+      tags:
+      - Alerts
+      summary: Update an alert's status (acknowledge or resolve)
+      operationId: updateAlertStatus
+      parameters:
+      - name: alertId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertStatusRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertHistoryResponse"
+  /api/v1/logger/alerts/channels/{channelId}:
+    get:
+      tags:
+      - Alerts
+      summary: Get an alert channel by ID
+      operationId: getChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertChannelResponse"
+    put:
+      tags:
+      - Alerts
+      summary: Update an alert channel
+      operationId: updateChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertChannelRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertChannelResponse"
+    delete:
+      tags:
+      - Alerts
+      summary: Delete an alert channel
+      operationId: deleteChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+  /api/v1/logger/traps:
+    get:
+      tags:
+      - Log Traps
+      summary: List traps for the team
+      operationId: getTraps
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogTrapResponse"
+    post:
+      tags:
+      - Log Traps
+      summary: Create a log trap
+      operationId: createTrap
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLogTrapRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+  /api/v1/logger/traps/{trapId}/toggle:
+    post:
+      tags:
+      - Log Traps
+      summary: Toggle a trap's active status
+      operationId: toggleTrap
+      parameters:
+      - name: trapId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+  /api/v1/logger/traps/{trapId}/test:
+    post:
+      tags:
+      - Log Traps
+      summary: Test a trap against historical logs
+      operationId: testTrap
+      parameters:
+      - name: trapId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestTrapRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TrapTestResult"
+  /api/v1/logger/traps/test:
+    post:
+      tags:
+      - Log Traps
+      summary: Test a trap definition before saving
+      operationId: testTrapDefinition
+      parameters:
+      - name: hoursBack
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 24
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLogTrapRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TrapTestResult"
+  /api/v1/logger/traces/spans:
+    post:
+      tags:
+      - Traces
+      summary: Create a trace span
+      operationId: createSpan
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTraceSpanRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TraceSpanResponse"
+  /api/v1/logger/traces/spans/batch:
+    post:
+      tags:
+      - Traces
+      summary: Create a batch of trace spans
+      operationId: createSpanBatch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/CreateTraceSpanRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/logger/sources:
+    get:
+      tags:
+      - Log Sources
+      summary: List log sources for the team
+      operationId: getSources
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogSourceResponse"
+    post:
+      tags:
+      - Log Sources
+      summary: Register a new log source
+      operationId: createSource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLogSourceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogSourceResponse"
+  /api/v1/logger/retention/policies:
+    get:
+      tags:
+      - Retention
+      summary: List retention policies for a team
+      operationId: getPoliciesByTeam
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RetentionPolicyResponse"
+    post:
+      tags:
+      - Retention
+      summary: Create a retention policy
+      operationId: createPolicy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRetentionPolicyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+  /api/v1/logger/retention/policies/{policyId}/execute:
+    post:
+      tags:
+      - Retention
+      summary: Manually execute a retention policy
+      operationId: executePolicy
+      parameters:
+      - name: policyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/logger/metrics:
+    get:
+      tags:
+      - Metrics
+      summary: List all metrics for a team
+      operationId: getMetricsByTeam
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetricResponse"
+    post:
+      tags:
+      - Metrics
+      summary: Register a new metric
+      operationId: registerMetric
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterMetricRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MetricResponse"
+  /api/v1/logger/metrics/data:
+    post:
+      tags:
+      - Metrics
+      summary: Push metric data points
+      operationId: pushMetricData
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushMetricDataRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/logger/logs:
+    post:
+      tags:
+      - Log Ingestion
+      summary: Ingest a single log entry
+      operationId: ingest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestLogEntryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogEntryResponse"
+  /api/v1/logger/logs/query:
+    post:
+      tags:
+      - Log Query
+      summary: Execute a structured log query
+      operationId: query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogQueryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+  /api/v1/logger/logs/queries/saved:
+    get:
+      tags:
+      - Log Query
+      summary: List saved queries
+      operationId: getSavedQueries
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedQueryResponse"
+    post:
+      tags:
+      - Log Query
+      summary: Save a query
+      operationId: saveQuery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSavedQueryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SavedQueryResponse"
+  /api/v1/logger/logs/queries/saved/{queryId}/execute:
+    post:
+      tags:
+      - Log Query
+      summary: Execute a saved query
+      operationId: executeSavedQuery
+      parameters:
+      - name: queryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+  /api/v1/logger/logs/dsl:
+    post:
+      tags:
+      - Log Query
+      summary: Execute a DSL query
+      operationId: executeDsl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DslQueryRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+  /api/v1/logger/logs/batch:
+    post:
+      tags:
+      - Log Ingestion
+      summary: Ingest a batch of log entries
+      operationId: ingestBatch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestLogBatchRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/logger/dashboards:
+    get:
+      tags:
+      - Dashboards
+      summary: List all dashboards for a team
+      operationId: getDashboardsByTeam
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+    post:
+      tags:
+      - Dashboards
+      summary: Create a dashboard
+      operationId: createDashboard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDashboardRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/dashboards/{dashboardId}/widgets:
+    post:
+      tags:
+      - Dashboards
+      summary: Add a widget to a dashboard
+      operationId: addWidget
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDashboardWidgetRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardWidgetResponse"
+  /api/v1/logger/dashboards/{dashboardId}/template:
+    post:
+      tags:
+      - Dashboards
+      summary: Mark a dashboard as a template
+      operationId: markAsTemplate
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+    delete:
+      tags:
+      - Dashboards
+      summary: Unmark a dashboard as a template
+      operationId: unmarkAsTemplate
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/dashboards/{dashboardId}/duplicate:
+    post:
+      tags:
+      - Dashboards
+      summary: Duplicate an existing dashboard
+      operationId: duplicateDashboard
+      parameters:
+      - name: dashboardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/dashboards/from-template:
+    post:
+      tags:
+      - Dashboards
+      summary: Create a dashboard from a template
+      operationId: createFromTemplate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFromTemplateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/anomalies/baselines:
+    get:
+      tags:
+      - Anomaly Detection
+      summary: List baselines for a team
+      operationId: getBaselinesByTeam
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnomalyBaselineResponse"
+    post:
+      tags:
+      - Anomaly Detection
+      summary: Create or update an anomaly baseline
+      operationId: createOrUpdateBaseline
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBaselineRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AnomalyBaselineResponse"
+  /api/v1/logger/alerts/rules:
+    get:
+      tags:
+      - Alerts
+      summary: List alert rules for the team
+      operationId: getRules
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertRuleResponse"
+    post:
+      tags:
+      - Alerts
+      summary: Create an alert rule
+      operationId: createRule
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertRuleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+  /api/v1/logger/alerts/channels:
+    get:
+      tags:
+      - Alerts
+      summary: List alert channels for the team
+      operationId: getChannels
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertChannelResponse"
+    post:
+      tags:
+      - Alerts
+      summary: Create an alert channel
+      operationId: createChannel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertChannelRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AlertChannelResponse"
+  /api/v1/logger/traps/paged:
+    get:
+      tags:
+      - Log Traps
+      summary: List traps with pagination
+      operationId: getTrapsPaged
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseLogTrapResponse"
+  /api/v1/logger/traces:
+    get:
+      tags:
+      - Traces
+      summary: List recent traces for a team
+      operationId: listRecentTraces
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseTraceListResponse"
+  /api/v1/logger/traces/{correlationId}/logs:
+    get:
+      tags:
+      - Traces
+      summary: Get related log entries for a trace
+      operationId: getRelatedLogEntries
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+  /api/v1/logger/traces/waterfall/{correlationId}:
+    get:
+      tags:
+      - Traces
+      summary: Get trace waterfall by correlation ID
+      operationId: getWaterfall
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TraceWaterfallResponse"
+  /api/v1/logger/traces/spans/{spanId}:
+    get:
+      tags:
+      - Traces
+      summary: Get a span by ID
+      operationId: getSpan
+      parameters:
+      - name: spanId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TraceSpanResponse"
+  /api/v1/logger/traces/service/{serviceName}:
+    get:
+      tags:
+      - Traces
+      summary: List traces by service name
+      operationId: listTracesByService
+      parameters:
+      - name: serviceName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseTraceListResponse"
+  /api/v1/logger/traces/rca/{correlationId}:
+    get:
+      tags:
+      - Traces
+      summary: Get root cause analysis by correlation ID
+      operationId: getRootCauseAnalysis
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RootCauseAnalysisResponse"
+  /api/v1/logger/traces/flow/{correlationId}:
+    get:
+      tags:
+      - Traces
+      summary: Get trace flow by correlation ID
+      operationId: getTraceFlow
+      parameters:
+      - name: correlationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TraceFlowResponse"
+  /api/v1/logger/traces/flow/by-trace-id/{traceId}:
+    get:
+      tags:
+      - Traces
+      summary: Get trace flow by trace ID
+      operationId: getTraceFlowByTraceId
+      parameters:
+      - name: traceId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TraceFlowResponse"
+  /api/v1/logger/traces/errors:
+    get:
+      tags:
+      - Traces
+      summary: List error traces for a team
+      operationId: listErrorTraces
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TraceListResponse"
+  /api/v1/logger/sources/paged:
+    get:
+      tags:
+      - Log Sources
+      summary: List log sources with pagination
+      operationId: getSourcesPaged
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseLogSourceResponse"
+  /api/v1/logger/retention/storage:
+    get:
+      tags:
+      - Retention
+      summary: Get storage usage statistics
+      operationId: getStorageUsage
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StorageUsageResponse"
+  /api/v1/logger/metrics/{metricId}/timeseries:
+    get:
+      tags:
+      - Metrics
+      summary: Get raw time-series data for a metric
+      operationId: getTimeSeries
+      parameters:
+      - name: metricId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: startTime
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: endTime
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MetricTimeSeriesResponse"
+  /api/v1/logger/metrics/{metricId}/timeseries/aggregated:
+    get:
+      tags:
+      - Metrics
+      summary: Get aggregated time-series data for a metric
+      operationId: getTimeSeriesAggregated
+      parameters:
+      - name: metricId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: startTime
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: endTime
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: resolution
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 60
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MetricTimeSeriesResponse"
+  /api/v1/logger/metrics/{metricId}/latest:
+    get:
+      tags:
+      - Metrics
+      summary: Get the latest value for a metric
+      operationId: getLatestValue
+      parameters:
+      - name: metricId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MetricDataPointResponse"
+  /api/v1/logger/metrics/{metricId}/aggregation:
+    get:
+      tags:
+      - Metrics
+      summary: Get aggregated statistics for a metric
+      operationId: getAggregation
+      parameters:
+      - name: metricId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: startTime
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: endTime
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MetricAggregationResponse"
+  /api/v1/logger/metrics/service/{serviceName}:
+    get:
+      tags:
+      - Metrics
+      summary: List metrics by service name
+      operationId: getMetricsByService
+      parameters:
+      - name: serviceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetricResponse"
+  /api/v1/logger/metrics/service/{serviceName}/summary:
+    get:
+      tags:
+      - Metrics
+      summary: Get metrics summary for a service
+      operationId: getServiceMetricsSummary
+      parameters:
+      - name: serviceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ServiceMetricsSummaryResponse"
+  /api/v1/logger/metrics/service/{serviceName}/latest:
+    get:
+      tags:
+      - Metrics
+      summary: Get latest values for all metrics of a service
+      operationId: getLatestValuesByService
+      parameters:
+      - name: serviceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: number
+                  format: double
+  /api/v1/logger/metrics/paged:
+    get:
+      tags:
+      - Metrics
+      summary: List metrics with pagination
+      operationId: getMetricsByTeamPaged
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseMetricResponse"
+  /api/v1/logger/logs/{id}:
+    get:
+      tags:
+      - Log Query
+      summary: Get a single log entry by ID
+      operationId: getLogEntry
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/LogEntryResponse"
+  /api/v1/logger/logs/search:
+    get:
+      tags:
+      - Log Query
+      summary: Full-text search across log entries
+      operationId: search
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: startTime
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: endTime
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+  /api/v1/logger/logs/queries/history:
+    get:
+      tags:
+      - Log Query
+      summary: Get query history
+      operationId: getQueryHistory
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseQueryHistoryResponse"
+  /api/v1/logger/health:
+    get:
+      tags:
+      - Health
+      operationId: health
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/logger/dashboards/templates:
+    get:
+      tags:
+      - Dashboards
+      summary: List dashboard templates for a team
+      operationId: getTemplates
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/dashboards/shared:
+    get:
+      tags:
+      - Dashboards
+      summary: List shared dashboards for a team
+      operationId: getSharedDashboards
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/dashboards/paged:
+    get:
+      tags:
+      - Dashboards
+      summary: List dashboards with pagination
+      operationId: getDashboardsByTeamPaged
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseDashboardResponse"
+  /api/v1/logger/dashboards/mine:
+    get:
+      tags:
+      - Dashboards
+      summary: List dashboards owned by the current user
+      operationId: getMyDashboards
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+  /api/v1/logger/anomalies/report:
+    get:
+      tags:
+      - Anomaly Detection
+      summary: Run a full anomaly check for a team
+      operationId: runFullCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AnomalyReportResponse"
+  /api/v1/logger/anomalies/check:
+    get:
+      tags:
+      - Anomaly Detection
+      summary: Check a single metric for anomalies
+      operationId: checkAnomaly
+      parameters:
+      - name: serviceName
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: metricName
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AnomalyCheckResponse"
+  /api/v1/logger/anomalies/baselines/service/{serviceName}:
+    get:
+      tags:
+      - Anomaly Detection
+      summary: List baselines by service name
+      operationId: getBaselinesByService
+      parameters:
+      - name: serviceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnomalyBaselineResponse"
+  /api/v1/logger/alerts/rules/paged:
+    get:
+      tags:
+      - Alerts
+      summary: List alert rules with pagination
+      operationId: getRulesPaged
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertRuleResponse"
+  /api/v1/logger/alerts/history:
+    get:
+      tags:
+      - Alerts
+      summary: Get alert history for the team
+      operationId: getAlertHistory
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertHistoryResponse"
+  /api/v1/logger/alerts/history/status/{status}:
+    get:
+      tags:
+      - Alerts
+      summary: Get alert history filtered by status
+      operationId: getAlertHistoryByStatus
+      parameters:
+      - name: status
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertHistoryResponse"
+  /api/v1/logger/alerts/history/severity/{severity}:
+    get:
+      tags:
+      - Alerts
+      summary: Get alert history filtered by severity
+      operationId: getAlertHistoryBySeverity
+      parameters:
+      - name: severity
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertHistoryResponse"
+  /api/v1/logger/alerts/channels/paged:
+    get:
+      tags:
+      - Alerts
+      summary: List alert channels with pagination
+      operationId: getChannelsPaged
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertChannelResponse"
+  /api/v1/logger/alerts/active-counts:
+    get:
+      tags:
+      - Alerts
+      summary: Get counts of active alerts by severity
+      operationId: getActiveAlertCounts
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int64
+components:
+  schemas:
+    CreateTrapConditionRequest:
+      required:
+      - conditionType
+      - field
+      type: object
+      properties:
+        conditionType:
+          type: string
+        field:
+          maxLength: 100
+          minLength: 0
+          type: string
+        pattern:
+          type: string
+        threshold:
+          minimum: 1
+          type: integer
+          format: int32
+        windowSeconds:
+          minimum: 1
+          type: integer
+          format: int32
+        serviceName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        logLevel:
+          type: string
+    UpdateLogTrapRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          type: string
+        trapType:
+          type: string
+        isActive:
+          type: boolean
+        conditions:
+          maxItems: 10
+          minItems: 0
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateTrapConditionRequest"
+    LogTrapResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        trapType:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        lastTriggeredAt:
+          type: string
+          format: date-time
+        triggerCount:
+          type: integer
+          format: int64
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrapConditionResponse"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TrapConditionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conditionType:
+          type: string
+        field:
+          type: string
+        pattern:
+          type: string
+        threshold:
+          type: integer
+          format: int32
+        windowSeconds:
+          type: integer
+          format: int32
+        serviceName:
+          type: string
+        logLevel:
+          type: string
+    UpdateLogSourceRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        environment:
+          maxLength: 50
+          minLength: 0
+          type: string
+        isActive:
+          type: boolean
+    LogSourceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        serviceId:
+          type: string
+          format: uuid
+        description:
+          type: string
+        environment:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        lastLogReceivedAt:
+          type: string
+          format: date-time
+        logCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateRetentionPolicyRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        sourceName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        logLevel:
+          type: string
+        retentionDays:
+          maximum: 365
+          minimum: 1
+          type: integer
+          format: int32
+        action:
+          type: string
+        archiveDestination:
+          maxLength: 500
+          minLength: 0
+          type: string
+        isActive:
+          type: boolean
+    RetentionPolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sourceName:
+          type: string
+        logLevel:
+          type: string
+        retentionDays:
+          type: integer
+          format: int32
+        action:
+          type: string
+        archiveDestination:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        lastExecutedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateMetricRequest:
+      type: object
+      properties:
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        unit:
+          maxLength: 50
+          minLength: 0
+          type: string
+        tags:
+          type: string
+    MetricResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        metricType:
+          type: string
+        description:
+          type: string
+        unit:
+          type: string
+        serviceName:
+          type: string
+        tags:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateSavedQueryRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        isShared:
+          type: boolean
+    SavedQueryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        isShared:
+          type: boolean
+        lastExecutedAt:
+          type: string
+          format: date-time
+        executionCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateDashboardRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        isShared:
+          type: boolean
+        isTemplate:
+          type: boolean
+        refreshIntervalSeconds:
+          maximum: 3600
+          minimum: 5
+          type: integer
+          format: int32
+        layoutJson:
+          type: string
+    DashboardResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        isShared:
+          type: boolean
+        isTemplate:
+          type: boolean
+        refreshIntervalSeconds:
+          type: integer
+          format: int32
+        layoutJson:
+          type: string
+        widgets:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardWidgetResponse"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DashboardWidgetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dashboardId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        widgetType:
+          type: string
+        queryJson:
+          type: string
+        configJson:
+          type: string
+        gridX:
+          type: integer
+          format: int32
+        gridY:
+          type: integer
+          format: int32
+        gridWidth:
+          type: integer
+          format: int32
+        gridHeight:
+          type: integer
+          format: int32
+        sortOrder:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateDashboardWidgetRequest:
+      type: object
+      properties:
+        title:
+          maxLength: 200
+          minLength: 0
+          type: string
+        widgetType:
+          type: string
+        queryJson:
+          type: string
+        configJson:
+          type: string
+        gridX:
+          minimum: 0
+          type: integer
+          format: int32
+        gridY:
+          minimum: 0
+          type: integer
+          format: int32
+        gridWidth:
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+        gridHeight:
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+        sortOrder:
+          type: integer
+          format: int32
+    ReorderWidgetsRequest:
+      required:
+      - widgetIds
+      type: object
+      properties:
+        widgetIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    UpdateLayoutRequest:
+      required:
+      - positions
+      type: object
+      properties:
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WidgetPositionUpdate"
+    WidgetPositionUpdate:
+      required:
+      - gridHeight
+      - gridWidth
+      - gridX
+      - gridY
+      - widgetId
+      type: object
+      properties:
+        widgetId:
+          type: string
+          format: uuid
+        gridX:
+          minimum: 0
+          type: integer
+          format: int32
+        gridY:
+          minimum: 0
+          type: integer
+          format: int32
+        gridWidth:
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+        gridHeight:
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+    UpdateBaselineRequest:
+      type: object
+      properties:
+        windowHours:
+          maximum: 720
+          minimum: 1
+          type: integer
+          format: int32
+        deviationThreshold:
+          maximum: 5
+          minimum: 1
+          type: number
+          format: double
+        isActive:
+          type: boolean
+    AnomalyBaselineResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        serviceName:
+          type: string
+        metricName:
+          type: string
+        baselineValue:
+          type: number
+          format: double
+        standardDeviation:
+          type: number
+          format: double
+        sampleCount:
+          type: integer
+          format: int64
+        windowStartTime:
+          type: string
+          format: date-time
+        windowEndTime:
+          type: string
+          format: date-time
+        deviationThreshold:
+          type: number
+          format: double
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        lastComputedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateAlertRuleRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        trapId:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        severity:
+          type: string
+        isActive:
+          type: boolean
+        throttleMinutes:
+          maximum: 1440
+          minimum: 1
+          type: integer
+          format: int32
+    AlertRuleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        trapId:
+          type: string
+          format: uuid
+        trapName:
+          type: string
+        channelId:
+          type: string
+          format: uuid
+        channelName:
+          type: string
+        severity:
+          type: string
+        isActive:
+          type: boolean
+        throttleMinutes:
+          type: integer
+          format: int32
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateAlertStatusRequest:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: string
+    AlertHistoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ruleId:
+          type: string
+          format: uuid
+        ruleName:
+          type: string
+        trapId:
+          type: string
+          format: uuid
+        trapName:
+          type: string
+        channelId:
+          type: string
+          format: uuid
+        channelName:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        acknowledgedBy:
+          type: string
+          format: uuid
+        acknowledgedAt:
+          type: string
+          format: date-time
+        resolvedBy:
+          type: string
+          format: uuid
+        resolvedAt:
+          type: string
+          format: date-time
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    UpdateAlertChannelRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        configuration:
+          type: string
+        isActive:
+          type: boolean
+    AlertChannelResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        channelType:
+          type: string
+        configuration:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateLogTrapRequest:
+      required:
+      - conditions
+      - name
+      - trapType
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          type: string
+        trapType:
+          type: string
+        conditions:
+          maxItems: 10
+          minItems: 0
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateTrapConditionRequest"
+    TestTrapRequest:
+      type: object
+      properties:
+        hoursBack:
+          maximum: 168
+          minimum: 1
+          type: integer
+          format: int32
+    TrapTestResult:
+      type: object
+      properties:
+        matchCount:
+          type: integer
+          format: int32
+        totalEvaluated:
+          type: integer
+          format: int32
+        sampleMatchIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        evaluatedFrom:
+          type: string
+          format: date-time
+        evaluatedTo:
+          type: string
+          format: date-time
+        matchPercentage:
+          type: number
+          format: double
+    CreateTraceSpanRequest:
+      required:
+      - correlationId
+      - operationName
+      - serviceName
+      - spanId
+      - startTime
+      - traceId
+      type: object
+      properties:
+        correlationId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        traceId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        spanId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        parentSpanId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        serviceName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        operationName:
+          maxLength: 500
+          minLength: 0
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+          format: int64
+        status:
+          type: string
+        statusMessage:
+          type: string
+        tags:
+          type: string
+    TraceSpanResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        spanId:
+          type: string
+        parentSpanId:
+          type: string
+        serviceName:
+          type: string
+        operationName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+          format: int64
+        status:
+          type: string
+        statusMessage:
+          type: string
+        tags:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    CreateLogSourceRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        serviceId:
+          type: string
+          format: uuid
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        environment:
+          maxLength: 50
+          minLength: 0
+          type: string
+    CreateRetentionPolicyRequest:
+      required:
+      - action
+      - name
+      - retentionDays
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        sourceName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        logLevel:
+          type: string
+        retentionDays:
+          maximum: 365
+          minimum: 1
+          type: integer
+          format: int32
+        action:
+          type: string
+        archiveDestination:
+          maxLength: 500
+          minLength: 0
+          type: string
+    RegisterMetricRequest:
+      required:
+      - metricType
+      - name
+      - serviceName
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        metricType:
+          type: string
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        unit:
+          maxLength: 50
+          minLength: 0
+          type: string
+        serviceName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        tags:
+          type: string
+    MetricDataPoint:
+      required:
+      - timestamp
+      - value
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: double
+        tags:
+          type: string
+    PushMetricDataRequest:
+      required:
+      - dataPoints
+      - metricId
+      type: object
+      properties:
+        metricId:
+          type: string
+          format: uuid
+        dataPoints:
+          maxItems: 1000
+          minItems: 0
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricDataPoint"
+    IngestLogEntryRequest:
+      required:
+      - level
+      - message
+      - serviceName
+      type: object
+      properties:
+        level:
+          type: string
+        message:
+          maxLength: 65536
+          minLength: 0
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        serviceName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        correlationId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        traceId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        spanId:
+          maxLength: 100
+          minLength: 0
+          type: string
+        loggerName:
+          maxLength: 500
+          minLength: 0
+          type: string
+        threadName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        exceptionClass:
+          maxLength: 500
+          minLength: 0
+          type: string
+        exceptionMessage:
+          type: string
+        stackTrace:
+          type: string
+        customFields:
+          type: string
+        hostName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        ipAddress:
+          maxLength: 45
+          minLength: 0
+          type: string
+    LogEntryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceId:
+          type: string
+          format: uuid
+        sourceName:
+          type: string
+        level:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        serviceName:
+          type: string
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        spanId:
+          type: string
+        loggerName:
+          type: string
+        threadName:
+          type: string
+        exceptionClass:
+          type: string
+        exceptionMessage:
+          type: string
+        stackTrace:
+          type: string
+        customFields:
+          type: string
+        hostName:
+          type: string
+        ipAddress:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    LogQueryRequest:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        level:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+        query:
+          type: string
+        loggerName:
+          type: string
+        exceptionClass:
+          type: string
+        hostName:
+          type: string
+        page:
+          minimum: 0
+          type: integer
+          format: int32
+        size:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+    PageResponseLogEntryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogEntryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    CreateSavedQueryRequest:
+      required:
+      - name
+      - queryJson
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        isShared:
+          type: boolean
+    DslQueryRequest:
+      required:
+      - query
+      type: object
+      properties:
+        query:
+          maxLength: 2000
+          minLength: 0
+          type: string
+        page:
+          minimum: 0
+          type: integer
+          format: int32
+        size:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+    IngestLogBatchRequest:
+      required:
+      - entries
+      type: object
+      properties:
+        entries:
+          maxItems: 1000
+          minItems: 0
+          type: array
+          items:
+            $ref: "#/components/schemas/IngestLogEntryRequest"
+    CreateDashboardRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          maxLength: 5000
+          minLength: 0
+          type: string
+        isShared:
+          type: boolean
+        refreshIntervalSeconds:
+          maximum: 3600
+          minimum: 5
+          type: integer
+          format: int32
+        layoutJson:
+          type: string
+    CreateDashboardWidgetRequest:
+      required:
+      - title
+      - widgetType
+      type: object
+      properties:
+        title:
+          maxLength: 200
+          minLength: 0
+          type: string
+        widgetType:
+          type: string
+        queryJson:
+          type: string
+        configJson:
+          type: string
+        gridX:
+          minimum: 0
+          type: integer
+          format: int32
+        gridY:
+          minimum: 0
+          type: integer
+          format: int32
+        gridWidth:
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+        gridHeight:
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+        sortOrder:
+          type: integer
+          format: int32
+    CreateFromTemplateRequest:
+      required:
+      - name
+      - templateId
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        templateId:
+          type: string
+          format: uuid
+    CreateBaselineRequest:
+      required:
+      - metricName
+      - serviceName
+      type: object
+      properties:
+        serviceName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        metricName:
+          maxLength: 200
+          minLength: 0
+          type: string
+        windowHours:
+          maximum: 720
+          minimum: 1
+          type: integer
+          format: int32
+        deviationThreshold:
+          maximum: 5
+          minimum: 1
+          type: number
+          format: double
+    CreateAlertRuleRequest:
+      required:
+      - channelId
+      - name
+      - severity
+      - trapId
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        trapId:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        severity:
+          type: string
+        throttleMinutes:
+          maximum: 1440
+          minimum: 1
+          type: integer
+          format: int32
+    CreateAlertChannelRequest:
+      required:
+      - channelType
+      - configuration
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        channelType:
+          type: string
+        configuration:
+          type: string
+    PageResponseLogTrapResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogTrapResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    PageResponseTraceListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceListResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    TraceListResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        rootService:
+          type: string
+        rootOperation:
+          type: string
+        spanCount:
+          type: integer
+          format: int32
+        serviceCount:
+          type: integer
+          format: int32
+        totalDurationMs:
+          type: integer
+          format: int64
+        hasErrors:
+          type: boolean
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+    TraceWaterfallResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        totalDurationMs:
+          type: integer
+          format: int64
+        spanCount:
+          type: integer
+          format: int32
+        serviceCount:
+          type: integer
+          format: int32
+        hasErrors:
+          type: boolean
+        spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/WaterfallSpan"
+    WaterfallSpan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        spanId:
+          type: string
+        parentSpanId:
+          type: string
+        serviceName:
+          type: string
+        operationName:
+          type: string
+        offsetMs:
+          type: integer
+          format: int64
+        durationMs:
+          type: integer
+          format: int64
+        status:
+          type: string
+        statusMessage:
+          type: string
+        depth:
+          type: integer
+          format: int32
+        relatedLogIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    RootCauseAnalysisResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        rootCauseSpan:
+          $ref: "#/components/schemas/TraceSpanResponse"
+        rootCauseService:
+          type: string
+        rootCauseMessage:
+          type: string
+        errorChain:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceSpanResponse"
+        relatedLogEntryIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        impactedServiceCount:
+          type: integer
+          format: int32
+        totalDurationMs:
+          type: integer
+          format: int64
+    TraceFlowResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceSpanResponse"
+        totalDurationMs:
+          type: integer
+          format: int64
+        spanCount:
+          type: integer
+          format: int32
+        hasErrors:
+          type: boolean
+    PageResponseLogSourceResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogSourceResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    StorageUsageResponse:
+      type: object
+      properties:
+        totalLogEntries:
+          type: integer
+          format: int64
+        totalMetricDataPoints:
+          type: integer
+          format: int64
+        totalTraceSpans:
+          type: integer
+          format: int64
+        logEntriesByService:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        logEntriesByLevel:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        activeRetentionPolicies:
+          type: integer
+          format: int32
+        oldestLogEntry:
+          type: string
+          format: date-time
+        newestLogEntry:
+          type: string
+          format: date-time
+    DataPoint:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: double
+        tags:
+          type: string
+    MetricTimeSeriesResponse:
+      type: object
+      properties:
+        metricId:
+          type: string
+          format: uuid
+        metricName:
+          type: string
+        serviceName:
+          type: string
+        metricType:
+          type: string
+        unit:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        resolution:
+          type: integer
+          format: int32
+        dataPoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataPoint"
+    MetricDataPointResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        metricId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: double
+        tags:
+          type: string
+        resolution:
+          type: integer
+          format: int32
+    MetricAggregationResponse:
+      type: object
+      properties:
+        metricId:
+          type: string
+          format: uuid
+        metricName:
+          type: string
+        serviceName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        dataPointCount:
+          type: integer
+          format: int64
+        sum:
+          type: number
+          format: double
+        avg:
+          type: number
+          format: double
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+        p50:
+          type: number
+          format: double
+        p95:
+          type: number
+          format: double
+        p99:
+          type: number
+          format: double
+        stddev:
+          type: number
+          format: double
+    ServiceMetricsSummaryResponse:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        metricCount:
+          type: integer
+          format: int32
+        metricsByType:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricResponse"
+    PageResponseMetricResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    PageResponseQueryHistoryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/QueryHistoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    QueryHistoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        resultCount:
+          type: integer
+          format: int64
+        executionTimeMs:
+          type: integer
+          format: int64
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    PageResponseDashboardResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    AnomalyCheckResponse:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        metricName:
+          type: string
+        currentValue:
+          type: number
+          format: double
+        baselineValue:
+          type: number
+          format: double
+        standardDeviation:
+          type: number
+          format: double
+        deviationThreshold:
+          type: number
+          format: double
+        zScore:
+          type: number
+          format: double
+        isAnomaly:
+          type: boolean
+        direction:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
+    AnomalyReportResponse:
+      type: object
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        generatedAt:
+          type: string
+          format: date-time
+        totalBaselines:
+          type: integer
+          format: int32
+        anomaliesDetected:
+          type: integer
+          format: int32
+        anomalies:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnomalyCheckResponse"
+        allChecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnomalyCheckResponse"
+    PageResponseAlertRuleResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertRuleResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    PageResponseAlertHistoryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertHistoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    PageResponseAlertChannelResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertChannelResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
