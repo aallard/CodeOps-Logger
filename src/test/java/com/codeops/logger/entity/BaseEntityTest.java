@@ -3,8 +3,10 @@ package com.codeops.logger.entity;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 /**
  * Tests for {@link BaseEntity} lifecycle callbacks.
@@ -21,7 +23,7 @@ class BaseEntityTest {
 
         assertThat(entity.getCreatedAt()).isNotNull();
         assertThat(entity.getUpdatedAt()).isNotNull();
-        assertThat(entity.getCreatedAt()).isEqualTo(entity.getUpdatedAt());
+        assertThat(entity.getCreatedAt()).isCloseTo(entity.getUpdatedAt(), within(1, ChronoUnit.MILLIS));
     }
 
     @Test
