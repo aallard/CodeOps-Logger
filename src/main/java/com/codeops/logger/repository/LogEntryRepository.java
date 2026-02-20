@@ -5,10 +5,14 @@ import com.codeops.logger.entity.enums.LogLevel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -45,4 +49,26 @@ public interface LogEntryRepository extends JpaRepository<LogEntry, UUID> {
     void deleteByTimestampBefore(Instant cutoff);
 
     void deleteByTeamIdAndTimestampBefore(UUID teamId, Instant cutoff);
+
+    void deleteByTeamIdAndServiceNameAndTimestampBefore(UUID teamId, String serviceName, Instant cutoff);
+
+    @Modifying
+    @Query("DELETE FROM LogEntry le WHERE le.teamId = :teamId AND le.timestamp < :cutoff AND le.level IN :levels")
+    void deleteByTeamIdAndTimestampBeforeAndLevelIn(@Param("teamId") UUID teamId, @Param("cutoff") Instant cutoff, @Param("levels") List<LogLevel> levels);
+
+    @Modifying
+    @Query("DELETE FROM LogEntry le WHERE le.teamId = :teamId AND le.serviceName = :serviceName AND le.timestamp < :cutoff AND le.level IN :levels")
+    void deleteByTeamIdAndServiceNameAndTimestampBeforeAndLevelIn(@Param("teamId") UUID teamId, @Param("serviceName") String serviceName, @Param("cutoff") Instant cutoff, @Param("levels") List<LogLevel> levels);
+
+    @Query("SELECT le.serviceName, COUNT(le) FROM LogEntry le GROUP BY le.serviceName")
+    List<Object[]> countGroupByServiceName();
+
+    @Query("SELECT le.level, COUNT(le) FROM LogEntry le GROUP BY le.level")
+    List<Object[]> countGroupByLevel();
+
+    @Query("SELECT MIN(le.timestamp) FROM LogEntry le")
+    Optional<Instant> findOldestTimestamp();
+
+    @Query("SELECT MAX(le.timestamp) FROM LogEntry le")
+    Optional<Instant> findNewestTimestamp();
 }
