@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link com.codeops.logger.config.GlobalExceptionHandler} verifying that
+ * Tests for {@link GlobalExceptionHandler} verifying that
  * Spring framework exceptions for client input errors return the correct HTTP status
  * codes and structured error responses.
  */

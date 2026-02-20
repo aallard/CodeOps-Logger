@@ -7,10 +7,12 @@ import com.codeops.logger.dto.response.LogEntryResponse;
 import com.codeops.logger.entity.LogEntry;
 import com.codeops.logger.entity.LogSource;
 import com.codeops.logger.entity.enums.LogLevel;
+import com.codeops.logger.event.LogEntryIngestedEvent;
 import com.codeops.logger.exception.ValidationException;
 import com.codeops.logger.repository.LogEntryRepository;
 import com.codeops.logger.repository.LogSourceRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class LogIngestionService {
     private final LogSourceRepository logSourceRepository;
     private final LogEntryMapper logEntryMapper;
     private final LogParsingService logParsingService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Creates a new LogIngestionService.
@@ -37,15 +40,18 @@ public class LogIngestionService {
      * @param logSourceRepository repository for log source lookup and creation
      * @param logEntryMapper      mapper for entity/DTO conversion
      * @param logParsingService   parser for raw log strings
+     * @param eventPublisher      publisher for log entry ingested events
      */
     public LogIngestionService(LogEntryRepository logEntryRepository,
                                LogSourceRepository logSourceRepository,
                                LogEntryMapper logEntryMapper,
-                               LogParsingService logParsingService) {
+                               LogParsingService logParsingService,
+                               ApplicationEventPublisher eventPublisher) {
         this.logEntryRepository = logEntryRepository;
         this.logSourceRepository = logSourceRepository;
         this.logEntryMapper = logEntryMapper;
         this.logParsingService = logParsingService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -69,6 +75,7 @@ public class LogIngestionService {
         entity.setMessage(truncateMessage(request.message()));
 
         LogEntry saved = logEntryRepository.save(entity);
+        eventPublisher.publishEvent(new LogEntryIngestedEvent(this, saved));
 
         source.setLastLogReceivedAt(Instant.now());
         source.setLogCount(source.getLogCount() + 1);
@@ -125,7 +132,9 @@ public class LogIngestionService {
         }
 
         if (!entriesToSave.isEmpty()) {
-            logEntryRepository.saveAll(entriesToSave);
+            List<LogEntry> savedEntries = logEntryRepository.saveAll(entriesToSave);
+            savedEntries.forEach(entry ->
+                    eventPublisher.publishEvent(new LogEntryIngestedEvent(this, entry)));
         }
         sourceCache.values().forEach(logSourceRepository::save);
 

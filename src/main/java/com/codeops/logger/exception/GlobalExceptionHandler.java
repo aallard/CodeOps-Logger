@@ -1,10 +1,6 @@
-package com.codeops.logger.config;
+package com.codeops.logger.exception;
 
 import com.codeops.logger.dto.response.ErrorResponse;
-import com.codeops.logger.exception.AuthorizationException;
-import com.codeops.logger.exception.LoggerException;
-import com.codeops.logger.exception.NotFoundException;
-import com.codeops.logger.exception.ValidationException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

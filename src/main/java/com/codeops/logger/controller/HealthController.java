@@ -1,5 +1,6 @@
-package com.codeops.logger.config;
+package com.codeops.logger.controller;
 
+import com.codeops.logger.config.AppConstants;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

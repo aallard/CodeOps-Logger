@@ -7,6 +7,7 @@ import com.codeops.logger.dto.response.LogEntryResponse;
 import com.codeops.logger.entity.LogEntry;
 import com.codeops.logger.entity.LogSource;
 import com.codeops.logger.entity.enums.LogLevel;
+import com.codeops.logger.event.LogEntryIngestedEvent;
 import com.codeops.logger.exception.ValidationException;
 import com.codeops.logger.repository.LogEntryRepository;
 import com.codeops.logger.repository.LogSourceRepository;
@@ -16,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -47,6 +49,9 @@ class LogIngestionServiceTest {
 
     @Mock
     private LogParsingService logParsingService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private LogIngestionService logIngestionService;
@@ -331,5 +336,52 @@ class LogIngestionServiceTest {
         logIngestionService.ingestRaw("bad data", "svc", TEAM_ID);
 
         verifyNoInteractions(logEntryRepository);
+    }
+
+    @Test
+    void testIngest_publishesEvent() {
+        IngestLogEntryRequest request = createRequest("INFO", "Test event", "svc");
+        LogSource source = createSource("svc");
+        LogEntry entity = new LogEntry();
+        entity.setId(UUID.randomUUID());
+
+        when(logSourceRepository.findByTeamIdAndName(TEAM_ID, "svc")).thenReturn(Optional.of(source));
+        when(logEntryMapper.toEntity(request)).thenReturn(entity);
+        when(logEntryRepository.save(any(LogEntry.class))).thenReturn(entity);
+        when(logSourceRepository.save(any(LogSource.class))).thenReturn(source);
+        when(logEntryMapper.toResponse(any(LogEntry.class))).thenReturn(mock(LogEntryResponse.class));
+
+        logIngestionService.ingest(request, TEAM_ID);
+
+        ArgumentCaptor<LogEntryIngestedEvent> eventCaptor = ArgumentCaptor.forClass(LogEntryIngestedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getLogEntry()).isEqualTo(entity);
+    }
+
+    @Test
+    void testIngestBatch_publishesEventForEach() {
+        List<IngestLogEntryRequest> requests = List.of(
+                createRequest("INFO", "msg1", "svc"),
+                createRequest("WARN", "msg2", "svc")
+        );
+        LogSource source = createSource("svc");
+        LogEntry entry1 = new LogEntry();
+        entry1.setId(UUID.randomUUID());
+        LogEntry entry2 = new LogEntry();
+        entry2.setId(UUID.randomUUID());
+
+        when(logSourceRepository.findByTeamIdAndName(TEAM_ID, "svc")).thenReturn(Optional.of(source));
+        when(logEntryMapper.toEntity(any(IngestLogEntryRequest.class))).thenReturn(new LogEntry());
+        when(logEntryRepository.saveAll(anyList())).thenReturn(List.of(entry1, entry2));
+        when(logSourceRepository.save(any(LogSource.class))).thenReturn(source);
+
+        logIngestionService.ingestBatch(requests, TEAM_ID);
+
+        ArgumentCaptor<LogEntryIngestedEvent> eventCaptor = ArgumentCaptor.forClass(LogEntryIngestedEvent.class);
+        verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
+        List<LogEntryIngestedEvent> events = eventCaptor.getAllValues();
+        assertThat(events).hasSize(2);
+        assertThat(events.get(0).getLogEntry()).isEqualTo(entry1);
+        assertThat(events.get(1).getLogEntry()).isEqualTo(entry2);
     }
 }

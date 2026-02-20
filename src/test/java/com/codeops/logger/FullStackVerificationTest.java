@@ -48,6 +48,11 @@ class FullStackVerificationTest {
     }
 
     @Test
+    void allEventListenersAreRegistered() {
+        assertThat(applicationContext.getBean("logEntryEventListener")).isNotNull();
+    }
+
+    @Test
     void allServicesAreRegistered() {
         assertThat(applicationContext.getBean("logIngestionService")).isNotNull();
         assertThat(applicationContext.getBean("logParsingService")).isNotNull();

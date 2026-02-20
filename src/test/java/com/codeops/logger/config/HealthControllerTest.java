@@ -1,5 +1,6 @@
 package com.codeops.logger.config;
 
+import com.codeops.logger.controller.HealthController;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
