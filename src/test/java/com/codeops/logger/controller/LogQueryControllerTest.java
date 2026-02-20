@@ -107,11 +107,10 @@ class LogQueryControllerTest {
     }
 
     @Test
-    void testSearch_missingQueryParam_returns500() throws Exception {
-        // MissingServletRequestParameterException falls through to the catch-all handler (500)
+    void testSearch_missingQueryParam_returns400() throws Exception {
         mockMvc.perform(get("/api/v1/logger/logs/search")
                         .header("X-Team-Id", TEAM_ID.toString()))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

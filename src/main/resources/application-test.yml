@@ -18,6 +18,8 @@ spring:
     consumer:
       group-id: codeops-logger-test
       auto-offset-reset: earliest
+    listener:
+      auto-startup: false
 
   jackson:
     serialization:
