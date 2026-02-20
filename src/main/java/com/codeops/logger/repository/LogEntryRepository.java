@@ -46,6 +46,8 @@ public interface LogEntryRepository extends JpaRepository<LogEntry, UUID> {
 
     long countByTeamIdAndTimestampBetween(UUID teamId, Instant start, Instant end);
 
+    long countByTeamIdAndServiceNameAndTimestampBetween(UUID teamId, String serviceName, Instant start, Instant end);
+
     void deleteByTimestampBefore(Instant cutoff);
 
     void deleteByTeamIdAndTimestampBefore(UUID teamId, Instant cutoff);
