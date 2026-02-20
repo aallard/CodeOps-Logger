@@ -18,6 +18,7 @@ import com.codeops.logger.entity.enums.LogLevel;
 import com.codeops.logger.exception.AuthorizationException;
 import com.codeops.logger.exception.NotFoundException;
 import com.codeops.logger.exception.ValidationException;
+import com.codeops.logger.repository.LogEntryRepository;
 import com.codeops.logger.repository.QueryHistoryRepository;
 import com.codeops.logger.repository.SavedQueryRepository;
 import com.codeops.logger.service.LogQueryDslParser.DslCondition;
@@ -53,6 +54,9 @@ import static org.mockito.Mockito.lenient;
 class LogQueryServiceTest {
 
     @Mock
+    private LogEntryRepository logEntryRepository;
+
+    @Mock
     private SavedQueryRepository savedQueryRepository;
 
     @Mock
@@ -83,6 +87,7 @@ class LogQueryServiceTest {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         logQueryService = new LogQueryService(
+                logEntryRepository,
                 savedQueryRepository,
                 queryHistoryRepository,
                 logEntryMapper,

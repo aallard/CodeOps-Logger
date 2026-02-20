@@ -14,6 +14,7 @@ import com.codeops.logger.dto.response.SavedQueryResponse;
 import com.codeops.logger.entity.LogEntry;
 import com.codeops.logger.entity.QueryHistory;
 import com.codeops.logger.entity.SavedQuery;
+import com.codeops.logger.repository.LogEntryRepository;
 import com.codeops.logger.entity.enums.LogLevel;
 import com.codeops.logger.exception.AuthorizationException;
 import com.codeops.logger.exception.NotFoundException;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LogQueryService {
 
+    private final LogEntryRepository logEntryRepository;
     private final SavedQueryRepository savedQueryRepository;
     private final QueryHistoryRepository queryHistoryRepository;
     private final LogEntryMapper logEntryMapper;
@@ -52,6 +54,21 @@ public class LogQueryService {
     private final ObjectMapper objectMapper;
     private final EntityManager entityManager;
     private final LogQueryDslParser dslParser;
+
+    // ==================== Single Entry Lookup ====================
+
+    /**
+     * Retrieves a single log entry by its ID.
+     *
+     * @param logEntryId the log entry ID
+     * @return the log entry response
+     * @throws NotFoundException if the log entry is not found
+     */
+    public LogEntryResponse getLogEntry(UUID logEntryId) {
+        LogEntry entry = logEntryRepository.findById(logEntryId)
+                .orElseThrow(() -> new NotFoundException("Log entry not found: " + logEntryId));
+        return logEntryMapper.toResponse(entry);
+    }
 
     // ==================== Structured Query ====================
 
