@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: codeops-logger-test
+      auto-offset-reset: earliest
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+codeops:
+  jwt:
+    secret: test-secret-key-minimum-32-characters-long-for-hs256-testing
+    expiration-hours: 24
+    refresh-expiration-days: 30
+  cors:
+    allowed-origins: http://localhost:3000
+
+logging:
+  level:
+    com.codeops: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+    root: WARN

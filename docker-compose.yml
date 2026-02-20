@@ -1,0 +1,34 @@
+name: codeops-logger
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: codeops-logger-db
+    environment:
+      POSTGRES_DB: codeops_logger
+      POSTGRES_USER: codeops
+      POSTGRES_PASSWORD: codeops
+    ports:
+      - "127.0.0.1:5437:5432"
+    volumes:
+      - codeops-logger-postgres-data:/var/lib/postgresql/data
+    labels:
+      com.codeops.project: "codeops-logger"
+      com.codeops.component: "database"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codeops -d codeops_logger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - codeops-logger-network
+
+networks:
+  codeops-logger-network:
+    name: codeops-logger-network
+    driver: bridge
+
+volumes:
+  codeops-logger-postgres-data:
+    name: codeops-logger-postgres-data

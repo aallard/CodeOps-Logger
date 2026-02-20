@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9094}
+    consumer:
+      group-id: codeops-logger-integration
+      auto-offset-reset: earliest
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+codeops:
+  jwt:
+    secret: integration-test-secret-minimum-32-characters-long-for-hs256
+    expiration-hours: 24
+    refresh-expiration-days: 30
+  cors:
+    allowed-origins: http://localhost:3000
+
+logging:
+  level:
+    com.codeops: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+    root: WARN
