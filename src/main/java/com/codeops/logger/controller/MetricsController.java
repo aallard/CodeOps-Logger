@@ -35,6 +35,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(AppConstants.API_PREFIX + "/metrics")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Metrics", description = "Application metrics registration, data ingestion, and querying")
 public class MetricsController extends BaseController {
 
@@ -152,7 +153,6 @@ public class MetricsController extends BaseController {
      * @return 204 No Content on success
      */
     @DeleteMapping("/{metricId}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a metric")
     public ResponseEntity<Void> deleteMetric(@PathVariable UUID metricId) {
         metricsService.deleteMetric(metricId);

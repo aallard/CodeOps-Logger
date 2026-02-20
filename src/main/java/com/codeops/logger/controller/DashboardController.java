@@ -33,6 +33,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(AppConstants.API_PREFIX + "/dashboards")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Dashboards", description = "Dashboard CRUD, widget management, templates, and layouts")
 public class DashboardController extends BaseController {
 
@@ -146,7 +147,6 @@ public class DashboardController extends BaseController {
      * @return 204 No Content on success
      */
     @DeleteMapping("/{dashboardId}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a dashboard")
     public ResponseEntity<Void> deleteDashboard(@PathVariable UUID dashboardId) {
         dashboardService.deleteDashboard(dashboardId);

@@ -28,6 +28,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(AppConstants.API_PREFIX + "/retention")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Retention", description = "Data retention policy management and storage monitoring")
 public class RetentionController extends BaseController {
 
@@ -42,7 +43,6 @@ public class RetentionController extends BaseController {
      * @return the created retention policy
      */
     @PostMapping("/policies")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a retention policy")
     public ResponseEntity<RetentionPolicyResponse> createPolicy(
             @Valid @RequestBody CreateRetentionPolicyRequest request,
@@ -91,7 +91,6 @@ public class RetentionController extends BaseController {
      * @return the updated retention policy
      */
     @PutMapping("/policies/{policyId}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a retention policy")
     public ResponseEntity<RetentionPolicyResponse> updatePolicy(
             @PathVariable UUID policyId,
@@ -109,7 +108,6 @@ public class RetentionController extends BaseController {
      * @return 204 No Content on success
      */
     @DeleteMapping("/policies/{policyId}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a retention policy")
     public ResponseEntity<Void> deletePolicy(
             @PathVariable UUID policyId,
@@ -128,7 +126,6 @@ public class RetentionController extends BaseController {
      * @return the updated retention policy
      */
     @PutMapping("/policies/{policyId}/toggle")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Toggle a retention policy active/inactive")
     public ResponseEntity<RetentionPolicyResponse> togglePolicy(
             @PathVariable UUID policyId,
@@ -147,7 +144,6 @@ public class RetentionController extends BaseController {
      * @return confirmation of execution
      */
     @PostMapping("/policies/{policyId}/execute")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Manually execute a retention policy")
     public ResponseEntity<Map<String, String>> executePolicy(
             @PathVariable UUID policyId,
