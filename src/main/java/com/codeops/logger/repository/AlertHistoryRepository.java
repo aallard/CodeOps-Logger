@@ -31,4 +31,6 @@ public interface AlertHistoryRepository extends JpaRepository<AlertHistory, UUID
     long countByTeamIdAndStatus(UUID teamId, AlertStatus status);
 
     long countByTeamIdAndSeverityAndStatus(UUID teamId, AlertSeverity severity, AlertStatus status);
+
+    boolean existsByRuleIdAndCreatedAtAfter(UUID ruleId, Instant since);
 }
