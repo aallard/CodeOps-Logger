@@ -1,0 +1,5083 @@
+openapi: 3.0.3
+info:
+  title: CodeOps Logger API
+  description: >-
+    Centralized log management, metrics, tracing, alerting, anomaly detection,
+    dashboards, and data retention for the CodeOps platform.
+  version: 0.1.0
+servers:
+  - url: http://localhost:8098
+    description: Local development server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Health
+    description: Public health check endpoint
+  - name: Log Ingestion
+    description: Ingest log entries via HTTP push
+  - name: Log Query
+    description: Query, search, and manage saved queries
+  - name: Log Sources
+    description: Manage log sources (services)
+  - name: Log Traps
+    description: Manage log traps and test definitions
+  - name: Alerts
+    description: Manage alert channels, rules, and history
+  - name: Anomaly Detection
+    description: Anomaly baselines, checks, and reports
+  - name: Metrics
+    description: Application metrics registration, data ingestion, and querying
+  - name: Dashboards
+    description: Dashboard CRUD, widget management, templates, and layouts
+  - name: Traces
+    description: "Distributed tracing: span ingestion, flow visualization, and analysis"
+  - name: Retention
+    description: Data retention policy management and storage monitoring
+
+paths:
+  # ======================== Health ========================
+  /api/v1/logger/health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Returns the current health status of the CodeOps-Logger service. No authentication required.
+      operationId: health
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  service:
+                    type: string
+                    example: codeops-logger
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  # ======================== Log Ingestion ========================
+  /api/v1/logger/logs:
+    post:
+      tags: [Log Ingestion]
+      summary: Ingest a single log entry
+      operationId: ingest
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestLogEntryRequest"
+      responses:
+        "201":
+          description: Log entry ingested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogEntryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/logs/batch:
+    post:
+      tags: [Log Ingestion]
+      summary: Ingest a batch of log entries
+      operationId: ingestBatch
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestLogBatchRequest"
+      responses:
+        "201":
+          description: Batch ingested
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ingested:
+                    type: integer
+                    format: int32
+                  total:
+                    type: integer
+                    format: int32
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ======================== Log Query ========================
+  /api/v1/logger/logs/query:
+    post:
+      tags: [Log Query]
+      summary: Execute a structured log query
+      operationId: query
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogQueryRequest"
+      responses:
+        "200":
+          description: Paginated log entry results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/logs/search:
+    get:
+      tags: [Log Query]
+      summary: Full-text search across log entries
+      operationId: search
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search term
+        - name: startTime
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional time range start
+        - name: endTime
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional time range end
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/logs/dsl:
+    post:
+      tags: [Log Query]
+      summary: Execute a DSL query
+      operationId: executeDsl
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DslQueryRequest"
+      responses:
+        "200":
+          description: Paginated DSL query results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/logs/{id}:
+    get:
+      tags: [Log Query]
+      summary: Get a single log entry by ID
+      operationId: getLogEntry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Log entry found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogEntryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ==================== Saved Queries ====================
+  /api/v1/logger/logs/queries/saved:
+    post:
+      tags: [Log Query]
+      summary: Save a query
+      operationId: saveQuery
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSavedQueryRequest"
+      responses:
+        "201":
+          description: Query saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedQueryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Log Query]
+      summary: List saved queries
+      operationId: getSavedQueries
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of saved queries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedQueryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/logs/queries/saved/{queryId}:
+    get:
+      tags: [Log Query]
+      summary: Get a saved query
+      operationId: getSavedQuery
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Saved query found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedQueryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Log Query]
+      summary: Update a saved query
+      operationId: updateSavedQuery
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSavedQueryRequest"
+      responses:
+        "200":
+          description: Saved query updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedQueryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Log Query]
+      summary: Delete a saved query
+      operationId: deleteSavedQuery
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Saved query deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/logs/queries/saved/{queryId}/execute:
+    post:
+      tags: [Log Query]
+      summary: Execute a saved query
+      operationId: executeSavedQuery
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: queryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated query results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseLogEntryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/logs/queries/history:
+    get:
+      tags: [Log Query]
+      summary: Get query history
+      operationId: getQueryHistory
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated query history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseQueryHistoryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ======================== Log Sources ========================
+  /api/v1/logger/sources:
+    post:
+      tags: [Log Sources]
+      summary: Register a new log source
+      operationId: createSource
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLogSourceRequest"
+      responses:
+        "201":
+          description: Source created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogSourceResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Log Sources]
+      summary: List log sources for the team
+      operationId: getSources
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of log sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogSourceResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/sources/paged:
+    get:
+      tags: [Log Sources]
+      summary: List log sources with pagination
+      operationId: getSourcesPaged
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated log sources
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseLogSourceResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/sources/{sourceId}:
+    get:
+      tags: [Log Sources]
+      summary: Get a log source by ID
+      operationId: getSource
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Log source found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogSourceResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Log Sources]
+      summary: Update a log source
+      operationId: updateSource
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLogSourceRequest"
+      responses:
+        "200":
+          description: Source updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogSourceResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Log Sources]
+      summary: Delete a log source
+      operationId: deleteSource
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Source deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ======================== Log Traps ========================
+  /api/v1/logger/traps:
+    post:
+      tags: [Log Traps]
+      summary: Create a log trap
+      operationId: createTrap
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLogTrapRequest"
+      responses:
+        "201":
+          description: Trap created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Log Traps]
+      summary: List traps for the team
+      operationId: getTraps
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of traps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogTrapResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traps/paged:
+    get:
+      tags: [Log Traps]
+      summary: List traps with pagination
+      operationId: getTrapsPaged
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated traps
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseLogTrapResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traps/test:
+    post:
+      tags: [Log Traps]
+      summary: Test a trap definition before saving
+      operationId: testTrapDefinition
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: hoursBack
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 24
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLogTrapRequest"
+      responses:
+        "200":
+          description: Test results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrapTestResult"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traps/{trapId}:
+    get:
+      tags: [Log Traps]
+      summary: Get a trap by ID
+      operationId: getTrap
+      parameters:
+        - name: trapId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Trap found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Log Traps]
+      summary: Update a trap
+      operationId: updateTrap
+      parameters:
+        - name: trapId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLogTrapRequest"
+      responses:
+        "200":
+          description: Trap updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Log Traps]
+      summary: Delete a trap
+      operationId: deleteTrap
+      parameters:
+        - name: trapId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Trap deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/traps/{trapId}/toggle:
+    post:
+      tags: [Log Traps]
+      summary: Toggle a trap's active status
+      operationId: toggleTrap
+      parameters:
+        - name: trapId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Trap toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogTrapResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/traps/{trapId}/test:
+    post:
+      tags: [Log Traps]
+      summary: Test a trap against historical logs
+      operationId: testTrap
+      parameters:
+        - name: trapId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestTrapRequest"
+      responses:
+        "200":
+          description: Test results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrapTestResult"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ======================== Alert Channels ========================
+  /api/v1/logger/alerts/channels:
+    post:
+      tags: [Alerts]
+      summary: Create an alert channel
+      operationId: createChannel
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertChannelRequest"
+      responses:
+        "201":
+          description: Channel created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertChannelResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Alerts]
+      summary: List alert channels for the team
+      operationId: getChannels
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of alert channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertChannelResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/alerts/channels/paged:
+    get:
+      tags: [Alerts]
+      summary: List alert channels with pagination
+      operationId: getChannelsPaged
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated alert channels
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertChannelResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/alerts/channels/{channelId}:
+    get:
+      tags: [Alerts]
+      summary: Get an alert channel by ID
+      operationId: getChannel
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Channel found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertChannelResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Alerts]
+      summary: Update an alert channel
+      operationId: updateChannel
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertChannelRequest"
+      responses:
+        "200":
+          description: Channel updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertChannelResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Alerts]
+      summary: Delete an alert channel
+      operationId: deleteChannel
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Channel deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ======================== Alert Rules ========================
+  /api/v1/logger/alerts/rules:
+    post:
+      tags: [Alerts]
+      summary: Create an alert rule
+      operationId: createRule
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertRuleRequest"
+      responses:
+        "201":
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Alerts]
+      summary: List alert rules for the team
+      operationId: getRules
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of alert rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertRuleResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/alerts/rules/paged:
+    get:
+      tags: [Alerts]
+      summary: List alert rules with pagination
+      operationId: getRulesPaged
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated alert rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertRuleResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/alerts/rules/{ruleId}:
+    get:
+      tags: [Alerts]
+      summary: Get an alert rule by ID
+      operationId: getRule
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Rule found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Alerts]
+      summary: Update an alert rule
+      operationId: updateRule
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertRuleRequest"
+      responses:
+        "200":
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRuleResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Alerts]
+      summary: Delete an alert rule
+      operationId: deleteRule
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Rule deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ======================== Alert History & Lifecycle ========================
+  /api/v1/logger/alerts/history:
+    get:
+      tags: [Alerts]
+      summary: Get alert history for the team
+      operationId: getAlertHistory
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated alert history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertHistoryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/alerts/history/status/{status}:
+    get:
+      tags: [Alerts]
+      summary: Get alert history filtered by status
+      operationId: getAlertHistoryByStatus
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [FIRED, ACKNOWLEDGED, RESOLVED]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated filtered alert history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertHistoryResponse"
+        "400":
+          description: Invalid status value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/alerts/history/severity/{severity}:
+    get:
+      tags: [Alerts]
+      summary: Get alert history filtered by severity
+      operationId: getAlertHistoryBySeverity
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: severity
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [INFO, WARNING, CRITICAL]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated filtered alert history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAlertHistoryResponse"
+        "400":
+          description: Invalid severity value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/alerts/history/{alertId}/status:
+    put:
+      tags: [Alerts]
+      summary: Update an alert's status (acknowledge or resolve)
+      operationId: updateAlertStatus
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertStatusRequest"
+      responses:
+        "200":
+          description: Alert status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertHistoryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/alerts/active-counts:
+    get:
+      tags: [Alerts]
+      summary: Get counts of active alerts by severity
+      operationId: getActiveAlertCounts
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: Map of severity to count
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int64
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ======================== Anomaly Detection ========================
+  /api/v1/logger/anomalies/baselines:
+    post:
+      tags: [Anomaly Detection]
+      summary: Create or update an anomaly baseline
+      operationId: createOrUpdateBaseline
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBaselineRequest"
+      responses:
+        "201":
+          description: Baseline created or updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnomalyBaselineResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Anomaly Detection]
+      summary: List baselines for a team
+      operationId: getBaselinesByTeam
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of baselines
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnomalyBaselineResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/anomalies/baselines/service/{serviceName}:
+    get:
+      tags: [Anomaly Detection]
+      summary: List baselines by service name
+      operationId: getBaselinesByService
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: serviceName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of baselines for the service
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnomalyBaselineResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/anomalies/baselines/{baselineId}:
+    get:
+      tags: [Anomaly Detection]
+      summary: Get a baseline by ID
+      operationId: getBaseline
+      parameters:
+        - name: baselineId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Baseline found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnomalyBaselineResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Anomaly Detection]
+      summary: Update a baseline
+      operationId: updateBaseline
+      parameters:
+        - name: baselineId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBaselineRequest"
+      responses:
+        "200":
+          description: Baseline updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnomalyBaselineResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Anomaly Detection]
+      summary: Delete a baseline
+      operationId: deleteBaseline
+      parameters:
+        - name: baselineId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Baseline deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/anomalies/check:
+    get:
+      tags: [Anomaly Detection]
+      summary: Check a single metric for anomalies
+      operationId: checkAnomaly
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: serviceName
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: metricName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Anomaly check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnomalyCheckResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Baseline not found
+
+  /api/v1/logger/anomalies/report:
+    get:
+      tags: [Anomaly Detection]
+      summary: Run a full anomaly check for a team
+      operationId: runFullCheck
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: Full anomaly report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnomalyReportResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ======================== Metrics ========================
+  /api/v1/logger/metrics:
+    post:
+      tags: [Metrics]
+      summary: Register a new metric
+      operationId: registerMetric
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterMetricRequest"
+      responses:
+        "201":
+          description: Metric registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Metrics]
+      summary: List all metrics for a team
+      operationId: getMetricsByTeam
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetricResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/metrics/paged:
+    get:
+      tags: [Metrics]
+      summary: List metrics with pagination
+      operationId: getMetricsByTeamPaged
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseMetricResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/metrics/service/{serviceName}:
+    get:
+      tags: [Metrics]
+      summary: List metrics by service name
+      operationId: getMetricsByService
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: serviceName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of metrics for the service
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetricResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/metrics/service/{serviceName}/summary:
+    get:
+      tags: [Metrics]
+      summary: Get metrics summary for a service
+      operationId: getServiceMetricsSummary
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: serviceName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service metrics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceMetricsSummaryResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/metrics/service/{serviceName}/latest:
+    get:
+      tags: [Metrics]
+      summary: Get latest values for all metrics of a service
+      operationId: getLatestValuesByService
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: serviceName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Map of metric name to latest value
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: number
+                  format: double
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/metrics/{metricId}:
+    get:
+      tags: [Metrics]
+      summary: Get a metric by ID
+      operationId: getMetric
+      parameters:
+        - name: metricId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Metric found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Metrics]
+      summary: Update a metric
+      operationId: updateMetric
+      parameters:
+        - name: metricId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMetricRequest"
+      responses:
+        "200":
+          description: Metric updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Metrics]
+      summary: Delete a metric
+      operationId: deleteMetric
+      parameters:
+        - name: metricId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Metric deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/metrics/data:
+    post:
+      tags: [Metrics]
+      summary: Push metric data points
+      operationId: pushMetricData
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushMetricDataRequest"
+      responses:
+        "201":
+          description: Data points ingested
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ingested:
+                    type: integer
+                    format: int32
+                  total:
+                    type: integer
+                    format: int32
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/metrics/{metricId}/timeseries:
+    get:
+      tags: [Metrics]
+      summary: Get raw time-series data for a metric
+      operationId: getTimeSeries
+      parameters:
+        - name: metricId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Raw time-series data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricTimeSeriesResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/metrics/{metricId}/timeseries/aggregated:
+    get:
+      tags: [Metrics]
+      summary: Get aggregated time-series data for a metric
+      operationId: getTimeSeriesAggregated
+      parameters:
+        - name: metricId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: resolution
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 60
+          description: Aggregation window in seconds
+      responses:
+        "200":
+          description: Aggregated time-series data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricTimeSeriesResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/metrics/{metricId}/aggregation:
+    get:
+      tags: [Metrics]
+      summary: Get aggregated statistics for a metric
+      operationId: getAggregation
+      parameters:
+        - name: metricId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Aggregated statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricAggregationResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/metrics/{metricId}/latest:
+    get:
+      tags: [Metrics]
+      summary: Get the latest value for a metric
+      operationId: getLatestValue
+      parameters:
+        - name: metricId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Latest data point
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricDataPointResponse"
+        "204":
+          description: No data exists for this metric
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ======================== Dashboards ========================
+  /api/v1/logger/dashboards:
+    post:
+      tags: [Dashboards]
+      summary: Create a dashboard
+      operationId: createDashboard
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDashboardRequest"
+      responses:
+        "201":
+          description: Dashboard created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Dashboards]
+      summary: List all dashboards for a team
+      operationId: getDashboardsByTeam
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/dashboards/paged:
+    get:
+      tags: [Dashboards]
+      summary: List dashboards with pagination
+      operationId: getDashboardsByTeamPaged
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated dashboards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseDashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/dashboards/shared:
+    get:
+      tags: [Dashboards]
+      summary: List shared dashboards for a team
+      operationId: getSharedDashboards
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of shared dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/dashboards/mine:
+    get:
+      tags: [Dashboards]
+      summary: List dashboards owned by the current user
+      operationId: getMyDashboards
+      responses:
+        "200":
+          description: List of user's dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/dashboards/templates:
+    get:
+      tags: [Dashboards]
+      summary: List dashboard templates for a team
+      operationId: getTemplates
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of template dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/dashboards/from-template:
+    post:
+      tags: [Dashboards]
+      summary: Create a dashboard from a template
+      operationId: createFromTemplate
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFromTemplateRequest"
+      responses:
+        "201":
+          description: Dashboard created from template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Template not found
+
+  /api/v1/logger/dashboards/{dashboardId}:
+    get:
+      tags: [Dashboards]
+      summary: Get a dashboard by ID
+      operationId: getDashboard
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Dashboard found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Dashboards]
+      summary: Update a dashboard
+      operationId: updateDashboard
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDashboardRequest"
+      responses:
+        "200":
+          description: Dashboard updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Dashboards]
+      summary: Delete a dashboard
+      operationId: deleteDashboard
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Dashboard deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/dashboards/{dashboardId}/widgets:
+    post:
+      tags: [Dashboards]
+      summary: Add a widget to a dashboard
+      operationId: addWidget
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDashboardWidgetRequest"
+      responses:
+        "201":
+          description: Widget added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardWidgetResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Dashboard not found
+
+  /api/v1/logger/dashboards/{dashboardId}/widgets/reorder:
+    put:
+      tags: [Dashboards]
+      summary: Reorder widgets within a dashboard
+      operationId: reorderWidgets
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderWidgetsRequest"
+      responses:
+        "200":
+          description: Widgets reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Dashboard not found
+
+  /api/v1/logger/dashboards/{dashboardId}/widgets/{widgetId}:
+    put:
+      tags: [Dashboards]
+      summary: Update a widget
+      operationId: updateWidget
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: widgetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDashboardWidgetRequest"
+      responses:
+        "200":
+          description: Widget updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardWidgetResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Dashboards]
+      summary: Remove a widget from a dashboard
+      operationId: removeWidget
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: widgetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Widget removed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/dashboards/{dashboardId}/layout:
+    put:
+      tags: [Dashboards]
+      summary: Update widget layout positions
+      operationId: updateLayout
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLayoutRequest"
+      responses:
+        "200":
+          description: Layout updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Dashboard not found
+
+  /api/v1/logger/dashboards/{dashboardId}/template:
+    post:
+      tags: [Dashboards]
+      summary: Mark a dashboard as a template
+      operationId: markAsTemplate
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Dashboard marked as template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Dashboards]
+      summary: Unmark a dashboard as a template
+      operationId: unmarkAsTemplate
+      parameters:
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Dashboard unmarked as template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/dashboards/{dashboardId}/duplicate:
+    post:
+      tags: [Dashboards]
+      summary: Duplicate an existing dashboard
+      operationId: duplicateDashboard
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: dashboardId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name for the duplicated dashboard
+      responses:
+        "201":
+          description: Dashboard duplicated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ======================== Traces ========================
+  /api/v1/logger/traces:
+    get:
+      tags: [Traces]
+      summary: List recent traces for a team
+      operationId: listRecentTraces
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of recent traces
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseTraceListResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traces/spans:
+    post:
+      tags: [Traces]
+      summary: Create a trace span
+      operationId: createSpan
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTraceSpanRequest"
+      responses:
+        "201":
+          description: Span created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TraceSpanResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traces/spans/batch:
+    post:
+      tags: [Traces]
+      summary: Create a batch of trace spans
+      operationId: createSpanBatch
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/CreateTraceSpanRequest"
+      responses:
+        "201":
+          description: Spans created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                    format: int32
+                  total:
+                    type: integer
+                    format: int32
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traces/spans/{spanId}:
+    get:
+      tags: [Traces]
+      summary: Get a span by ID
+      operationId: getSpan
+      parameters:
+        - name: spanId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Span found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TraceSpanResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/traces/flow/{correlationId}:
+    get:
+      tags: [Traces]
+      summary: Get trace flow by correlation ID
+      operationId: getTraceFlow
+      parameters:
+        - name: correlationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trace flow with all spans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TraceFlowResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/traces/flow/by-trace-id/{traceId}:
+    get:
+      tags: [Traces]
+      summary: Get trace flow by trace ID
+      operationId: getTraceFlowByTraceId
+      parameters:
+        - name: traceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trace flow with all spans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TraceFlowResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/traces/waterfall/{correlationId}:
+    get:
+      tags: [Traces]
+      summary: Get trace waterfall by correlation ID
+      operationId: getWaterfall
+      parameters:
+        - name: correlationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Waterfall visualization data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TraceWaterfallResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/traces/rca/{correlationId}:
+    get:
+      tags: [Traces]
+      summary: Get root cause analysis by correlation ID
+      operationId: getRootCauseAnalysis
+      parameters:
+        - name: correlationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Root cause analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RootCauseAnalysisResponse"
+        "204":
+          description: No errors found in trace
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/traces/service/{serviceName}:
+    get:
+      tags: [Traces]
+      summary: List traces by service name
+      operationId: listTracesByService
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: serviceName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Paginated traces for the service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseTraceListResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traces/errors:
+    get:
+      tags: [Traces]
+      summary: List error traces for a team
+      operationId: listErrorTraces
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: List of error traces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TraceListResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/traces/{correlationId}/logs:
+    get:
+      tags: [Traces]
+      summary: Get related log entries for a trace
+      operationId: getRelatedLogEntries
+      parameters:
+        - name: correlationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of related log entry IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ======================== Retention ========================
+  /api/v1/logger/retention/policies:
+    post:
+      tags: [Retention]
+      summary: Create a retention policy
+      operationId: createPolicy
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRetentionPolicyRequest"
+      responses:
+        "201":
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+    get:
+      tags: [Retention]
+      summary: List retention policies for a team
+      operationId: getPoliciesByTeam
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+      responses:
+        "200":
+          description: List of retention policies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RetentionPolicyResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /api/v1/logger/retention/policies/{policyId}:
+    get:
+      tags: [Retention]
+      summary: Get a retention policy by ID
+      operationId: getPolicy
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Policy found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    put:
+      tags: [Retention]
+      summary: Update a retention policy
+      operationId: updatePolicy
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRetentionPolicyRequest"
+      responses:
+        "200":
+          description: Policy updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      tags: [Retention]
+      summary: Delete a retention policy
+      operationId: deletePolicy
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Policy deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/retention/policies/{policyId}/toggle:
+    put:
+      tags: [Retention]
+      summary: Toggle a retention policy active/inactive
+      operationId: togglePolicy
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                active:
+                  type: boolean
+      responses:
+        "200":
+          description: Policy toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetentionPolicyResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/retention/policies/{policyId}/execute:
+    post:
+      tags: [Retention]
+      summary: Manually execute a retention policy
+      operationId: executePolicy
+      parameters:
+        - $ref: "#/components/parameters/X-Team-Id"
+        - name: policyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Execution confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: executed
+                  policyId:
+                    type: string
+                    format: uuid
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /api/v1/logger/retention/storage:
+    get:
+      tags: [Retention]
+      summary: Get storage usage statistics
+      operationId: getStorageUsage
+      responses:
+        "200":
+          description: Storage usage report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageUsageResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    X-Team-Id:
+      name: X-Team-Id
+      in: header
+      required: true
+      description: Team UUID for scoping the request
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ==================== Error & Page Wrappers ====================
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        message:
+          type: string
+
+    PageResponseLogEntryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogEntryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseQueryHistoryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/QueryHistoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseLogSourceResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogSourceResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseLogTrapResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogTrapResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseAlertChannelResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertChannelResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseAlertRuleResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertRuleResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseAlertHistoryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertHistoryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseMetricResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseDashboardResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    PageResponseTraceListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceListResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+
+    # ==================== Request DTOs ====================
+    IngestLogEntryRequest:
+      type: object
+      required:
+        - level
+        - message
+        - serviceName
+      properties:
+        level:
+          type: string
+          description: Log severity level
+        message:
+          type: string
+          maxLength: 65536
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp. Defaults to server time if null.
+        serviceName:
+          type: string
+          maxLength: 200
+        correlationId:
+          type: string
+          maxLength: 100
+        traceId:
+          type: string
+          maxLength: 100
+        spanId:
+          type: string
+          maxLength: 100
+        loggerName:
+          type: string
+          maxLength: 500
+        threadName:
+          type: string
+          maxLength: 200
+        exceptionClass:
+          type: string
+          maxLength: 500
+        exceptionMessage:
+          type: string
+        stackTrace:
+          type: string
+        customFields:
+          type: string
+          description: Arbitrary key-value pairs as JSON string
+        hostName:
+          type: string
+          maxLength: 200
+        ipAddress:
+          type: string
+          maxLength: 45
+
+    IngestLogBatchRequest:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/IngestLogEntryRequest"
+          minItems: 1
+          maxItems: 1000
+
+    LogQueryRequest:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        level:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+        query:
+          type: string
+        loggerName:
+          type: string
+        exceptionClass:
+          type: string
+        hostName:
+          type: string
+        page:
+          type: integer
+          format: int32
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+
+    DslQueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          maxLength: 2000
+        page:
+          type: integer
+          format: int32
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+
+    CreateSavedQueryRequest:
+      type: object
+      required:
+        - name
+        - queryJson
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        isShared:
+          type: boolean
+
+    UpdateSavedQueryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        isShared:
+          type: boolean
+
+    CreateLogSourceRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        serviceId:
+          type: string
+          format: uuid
+        description:
+          type: string
+          maxLength: 5000
+        environment:
+          type: string
+          maxLength: 50
+
+    UpdateLogSourceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        environment:
+          type: string
+          maxLength: 50
+        isActive:
+          type: boolean
+
+    CreateLogTrapRequest:
+      type: object
+      required:
+        - name
+        - trapType
+        - conditions
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        trapType:
+          type: string
+          description: "Trap trigger mechanism: PATTERN, FREQUENCY, or ABSENCE"
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateTrapConditionRequest"
+          minItems: 1
+          maxItems: 10
+
+    UpdateLogTrapRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        trapType:
+          type: string
+        isActive:
+          type: boolean
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateTrapConditionRequest"
+          maxItems: 10
+
+    CreateTrapConditionRequest:
+      type: object
+      required:
+        - conditionType
+        - field
+      properties:
+        conditionType:
+          type: string
+          description: "Condition strategy: REGEX, KEYWORD, FREQUENCY_THRESHOLD, or ABSENCE"
+        field:
+          type: string
+          maxLength: 100
+        pattern:
+          type: string
+        threshold:
+          type: integer
+          format: int32
+          minimum: 1
+        windowSeconds:
+          type: integer
+          format: int32
+          minimum: 1
+        serviceName:
+          type: string
+          maxLength: 200
+        logLevel:
+          type: string
+
+    TestTrapRequest:
+      type: object
+      required:
+        - hoursBack
+      properties:
+        hoursBack:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 168
+
+    CreateAlertChannelRequest:
+      type: object
+      required:
+        - name
+        - channelType
+        - configuration
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        channelType:
+          type: string
+          description: "Channel type: EMAIL, WEBHOOK, TEAMS, or SLACK"
+        configuration:
+          type: string
+          description: Channel-specific configuration as JSON string
+
+    UpdateAlertChannelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        configuration:
+          type: string
+        isActive:
+          type: boolean
+
+    CreateAlertRuleRequest:
+      type: object
+      required:
+        - name
+        - trapId
+        - channelId
+        - severity
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        trapId:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        severity:
+          type: string
+          description: "Alert severity: INFO, WARNING, or CRITICAL"
+        throttleMinutes:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1440
+
+    UpdateAlertRuleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        trapId:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        severity:
+          type: string
+        isActive:
+          type: boolean
+        throttleMinutes:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1440
+
+    UpdateAlertStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: "New status: ACKNOWLEDGED or RESOLVED"
+
+    CreateBaselineRequest:
+      type: object
+      required:
+        - serviceName
+        - metricName
+      properties:
+        serviceName:
+          type: string
+          maxLength: 200
+        metricName:
+          type: string
+          maxLength: 200
+        windowHours:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 720
+        deviationThreshold:
+          type: number
+          format: double
+          minimum: 1
+          maximum: 5
+
+    UpdateBaselineRequest:
+      type: object
+      properties:
+        windowHours:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 720
+        deviationThreshold:
+          type: number
+          format: double
+          minimum: 1
+          maximum: 5
+        isActive:
+          type: boolean
+
+    RegisterMetricRequest:
+      type: object
+      required:
+        - name
+        - metricType
+        - serviceName
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        metricType:
+          type: string
+          description: "Metric type: COUNTER, GAUGE, HISTOGRAM, or TIMER"
+        description:
+          type: string
+          maxLength: 5000
+        unit:
+          type: string
+          maxLength: 50
+        serviceName:
+          type: string
+          maxLength: 200
+        tags:
+          type: string
+          description: JSON key-value tags
+
+    UpdateMetricRequest:
+      type: object
+      properties:
+        description:
+          type: string
+          maxLength: 5000
+        unit:
+          type: string
+          maxLength: 50
+        tags:
+          type: string
+
+    PushMetricDataRequest:
+      type: object
+      required:
+        - metricId
+        - dataPoints
+      properties:
+        metricId:
+          type: string
+          format: uuid
+        dataPoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricDataPoint"
+          minItems: 1
+          maxItems: 1000
+
+    MetricDataPoint:
+      type: object
+      required:
+        - timestamp
+        - value
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: double
+        tags:
+          type: string
+          description: JSON dimension tags
+
+    MetricQueryRequest:
+      type: object
+      required:
+        - metricId
+        - startTime
+        - endTime
+      properties:
+        metricId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        resolution:
+          type: integer
+          format: int32
+          minimum: 10
+          maximum: 3600
+          description: Aggregation window in seconds. Null = raw data points.
+
+    CreateDashboardRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        isShared:
+          type: boolean
+        refreshIntervalSeconds:
+          type: integer
+          format: int32
+          minimum: 5
+          maximum: 3600
+        layoutJson:
+          type: string
+
+    UpdateDashboardRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        isShared:
+          type: boolean
+        isTemplate:
+          type: boolean
+        refreshIntervalSeconds:
+          type: integer
+          format: int32
+          minimum: 5
+          maximum: 3600
+        layoutJson:
+          type: string
+
+    CreateDashboardWidgetRequest:
+      type: object
+      required:
+        - title
+        - widgetType
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        widgetType:
+          type: string
+          description: "Widget type: LOG_STREAM, TIME_SERIES_CHART, COUNTER, GAUGE, TABLE, HEATMAP, PIE_CHART, or BAR_CHART"
+        queryJson:
+          type: string
+        configJson:
+          type: string
+        gridX:
+          type: integer
+          format: int32
+          minimum: 0
+        gridY:
+          type: integer
+          format: int32
+          minimum: 0
+        gridWidth:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        gridHeight:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        sortOrder:
+          type: integer
+          format: int32
+
+    UpdateDashboardWidgetRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        widgetType:
+          type: string
+        queryJson:
+          type: string
+        configJson:
+          type: string
+        gridX:
+          type: integer
+          format: int32
+          minimum: 0
+        gridY:
+          type: integer
+          format: int32
+          minimum: 0
+        gridWidth:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        gridHeight:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        sortOrder:
+          type: integer
+          format: int32
+
+    ReorderWidgetsRequest:
+      type: object
+      required:
+        - widgetIds
+      properties:
+        widgetIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+
+    UpdateLayoutRequest:
+      type: object
+      required:
+        - positions
+      properties:
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WidgetPositionUpdate"
+          minItems: 1
+
+    WidgetPositionUpdate:
+      type: object
+      required:
+        - widgetId
+        - gridX
+        - gridY
+        - gridWidth
+        - gridHeight
+      properties:
+        widgetId:
+          type: string
+          format: uuid
+        gridX:
+          type: integer
+          format: int32
+          minimum: 0
+        gridY:
+          type: integer
+          format: int32
+          minimum: 0
+        gridWidth:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        gridHeight:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+
+    CreateFromTemplateRequest:
+      type: object
+      required:
+        - name
+        - templateId
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        templateId:
+          type: string
+          format: uuid
+
+    CreateTraceSpanRequest:
+      type: object
+      required:
+        - correlationId
+        - traceId
+        - spanId
+        - serviceName
+        - operationName
+        - startTime
+      properties:
+        correlationId:
+          type: string
+          maxLength: 100
+        traceId:
+          type: string
+          maxLength: 100
+        spanId:
+          type: string
+          maxLength: 100
+        parentSpanId:
+          type: string
+          maxLength: 100
+        serviceName:
+          type: string
+          maxLength: 200
+        operationName:
+          type: string
+          maxLength: 500
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+          format: int64
+        status:
+          type: string
+          description: "Span status: OK or ERROR"
+        statusMessage:
+          type: string
+        tags:
+          type: string
+          description: JSON key-value tags
+
+    CreateRetentionPolicyRequest:
+      type: object
+      required:
+        - name
+        - retentionDays
+        - action
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        sourceName:
+          type: string
+          maxLength: 200
+        logLevel:
+          type: string
+        retentionDays:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 365
+        action:
+          type: string
+          description: "Retention action: PURGE or ARCHIVE"
+        archiveDestination:
+          type: string
+          maxLength: 500
+
+    UpdateRetentionPolicyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        sourceName:
+          type: string
+          maxLength: 200
+        logLevel:
+          type: string
+        retentionDays:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 365
+        action:
+          type: string
+        archiveDestination:
+          type: string
+          maxLength: 500
+        isActive:
+          type: boolean
+
+    # ==================== Response DTOs ====================
+    LogEntryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceId:
+          type: string
+          format: uuid
+        sourceName:
+          type: string
+        level:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        serviceName:
+          type: string
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        spanId:
+          type: string
+        loggerName:
+          type: string
+        threadName:
+          type: string
+        exceptionClass:
+          type: string
+        exceptionMessage:
+          type: string
+        stackTrace:
+          type: string
+        customFields:
+          type: string
+        hostName:
+          type: string
+        ipAddress:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    LogSourceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        serviceId:
+          type: string
+          format: uuid
+        description:
+          type: string
+        environment:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        lastLogReceivedAt:
+          type: string
+          format: date-time
+        logCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LogTrapResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        trapType:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        lastTriggeredAt:
+          type: string
+          format: date-time
+        triggerCount:
+          type: integer
+          format: int64
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrapConditionResponse"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TrapConditionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conditionType:
+          type: string
+        field:
+          type: string
+        pattern:
+          type: string
+        threshold:
+          type: integer
+          format: int32
+        windowSeconds:
+          type: integer
+          format: int32
+        serviceName:
+          type: string
+        logLevel:
+          type: string
+
+    TrapTestResult:
+      type: object
+      properties:
+        matchCount:
+          type: integer
+          format: int32
+        totalEvaluated:
+          type: integer
+          format: int32
+        sampleMatchIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        evaluatedFrom:
+          type: string
+          format: date-time
+        evaluatedTo:
+          type: string
+          format: date-time
+        matchPercentage:
+          type: number
+          format: double
+
+    SavedQueryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        isShared:
+          type: boolean
+        lastExecutedAt:
+          type: string
+          format: date-time
+        executionCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    QueryHistoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        queryJson:
+          type: string
+        queryDsl:
+          type: string
+        resultCount:
+          type: integer
+          format: int64
+        executionTimeMs:
+          type: integer
+          format: int64
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    IngestionStatsResponse:
+      type: object
+      properties:
+        totalLogsIngested:
+          type: integer
+          format: int64
+        logsPerSecond:
+          type: number
+          format: double
+        activeSourceCount:
+          type: integer
+          format: int32
+        logsByLevel:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        logsByService:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        since:
+          type: string
+          format: date-time
+
+    AlertChannelResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        channelType:
+          type: string
+        configuration:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AlertRuleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        trapId:
+          type: string
+          format: uuid
+        trapName:
+          type: string
+        channelId:
+          type: string
+          format: uuid
+        channelName:
+          type: string
+        severity:
+          type: string
+        isActive:
+          type: boolean
+        throttleMinutes:
+          type: integer
+          format: int32
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AlertHistoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ruleId:
+          type: string
+          format: uuid
+        ruleName:
+          type: string
+        trapId:
+          type: string
+          format: uuid
+        trapName:
+          type: string
+        channelId:
+          type: string
+          format: uuid
+        channelName:
+          type: string
+        severity:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        acknowledgedBy:
+          type: string
+          format: uuid
+        acknowledgedAt:
+          type: string
+          format: date-time
+        resolvedBy:
+          type: string
+          format: uuid
+        resolvedAt:
+          type: string
+          format: date-time
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    AnomalyBaselineResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        serviceName:
+          type: string
+        metricName:
+          type: string
+        baselineValue:
+          type: number
+          format: double
+        standardDeviation:
+          type: number
+          format: double
+        sampleCount:
+          type: integer
+          format: int64
+        windowStartTime:
+          type: string
+          format: date-time
+        windowEndTime:
+          type: string
+          format: date-time
+        deviationThreshold:
+          type: number
+          format: double
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        lastComputedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AnomalyCheckResponse:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        metricName:
+          type: string
+        currentValue:
+          type: number
+          format: double
+        baselineValue:
+          type: number
+          format: double
+        standardDeviation:
+          type: number
+          format: double
+        deviationThreshold:
+          type: number
+          format: double
+        zScore:
+          type: number
+          format: double
+        isAnomaly:
+          type: boolean
+        direction:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
+
+    AnomalyReportResponse:
+      type: object
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        generatedAt:
+          type: string
+          format: date-time
+        totalBaselines:
+          type: integer
+          format: int32
+        anomaliesDetected:
+          type: integer
+          format: int32
+        anomalies:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnomalyCheckResponse"
+        allChecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnomalyCheckResponse"
+
+    MetricResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        metricType:
+          type: string
+        description:
+          type: string
+        unit:
+          type: string
+        serviceName:
+          type: string
+        tags:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MetricDataPointResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        metricId:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: double
+        tags:
+          type: string
+        resolution:
+          type: integer
+          format: int32
+
+    MetricTimeSeriesResponse:
+      type: object
+      properties:
+        metricId:
+          type: string
+          format: uuid
+        metricName:
+          type: string
+        serviceName:
+          type: string
+        metricType:
+          type: string
+        unit:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        resolution:
+          type: integer
+          format: int32
+        dataPoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricTimeSeriesDataPoint"
+
+    MetricTimeSeriesDataPoint:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: double
+        tags:
+          type: string
+
+    MetricAggregationResponse:
+      type: object
+      properties:
+        metricId:
+          type: string
+          format: uuid
+        metricName:
+          type: string
+        serviceName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        dataPointCount:
+          type: integer
+          format: int64
+        sum:
+          type: number
+          format: double
+        avg:
+          type: number
+          format: double
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+        p50:
+          type: number
+          format: double
+        p95:
+          type: number
+          format: double
+        p99:
+          type: number
+          format: double
+        stddev:
+          type: number
+          format: double
+
+    ServiceMetricsSummaryResponse:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        metricCount:
+          type: integer
+          format: int32
+        metricsByType:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricResponse"
+
+    DashboardResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        isShared:
+          type: boolean
+        isTemplate:
+          type: boolean
+        refreshIntervalSeconds:
+          type: integer
+          format: int32
+        layoutJson:
+          type: string
+        widgets:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardWidgetResponse"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DashboardWidgetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dashboardId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        widgetType:
+          type: string
+        queryJson:
+          type: string
+        configJson:
+          type: string
+        gridX:
+          type: integer
+          format: int32
+        gridY:
+          type: integer
+          format: int32
+        gridWidth:
+          type: integer
+          format: int32
+        gridHeight:
+          type: integer
+          format: int32
+        sortOrder:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TraceSpanResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        spanId:
+          type: string
+        parentSpanId:
+          type: string
+        serviceName:
+          type: string
+        operationName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+          format: int64
+        status:
+          type: string
+        statusMessage:
+          type: string
+        tags:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    TraceFlowResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceSpanResponse"
+        totalDurationMs:
+          type: integer
+          format: int64
+        spanCount:
+          type: integer
+          format: int32
+        hasErrors:
+          type: boolean
+
+    TraceWaterfallResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        totalDurationMs:
+          type: integer
+          format: int64
+        spanCount:
+          type: integer
+          format: int32
+        serviceCount:
+          type: integer
+          format: int32
+        hasErrors:
+          type: boolean
+        spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/WaterfallSpan"
+
+    WaterfallSpan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        spanId:
+          type: string
+        parentSpanId:
+          type: string
+        serviceName:
+          type: string
+        operationName:
+          type: string
+        offsetMs:
+          type: integer
+          format: int64
+          description: Offset from root span start in milliseconds
+        durationMs:
+          type: integer
+          format: int64
+        status:
+          type: string
+        statusMessage:
+          type: string
+        depth:
+          type: integer
+          format: int32
+        relatedLogIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    RootCauseAnalysisResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        rootCauseSpan:
+          $ref: "#/components/schemas/TraceSpanResponse"
+        rootCauseService:
+          type: string
+        rootCauseMessage:
+          type: string
+        errorChain:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraceSpanResponse"
+        relatedLogEntryIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        impactedServiceCount:
+          type: integer
+          format: int32
+        totalDurationMs:
+          type: integer
+          format: int64
+
+    TraceListResponse:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        traceId:
+          type: string
+        rootService:
+          type: string
+        rootOperation:
+          type: string
+        spanCount:
+          type: integer
+          format: int32
+        serviceCount:
+          type: integer
+          format: int32
+        totalDurationMs:
+          type: integer
+          format: int64
+        hasErrors:
+          type: boolean
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+
+    RetentionPolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sourceName:
+          type: string
+        logLevel:
+          type: string
+        retentionDays:
+          type: integer
+          format: int32
+        action:
+          type: string
+        archiveDestination:
+          type: string
+        isActive:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        lastExecutedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    StorageUsageResponse:
+      type: object
+      properties:
+        totalLogEntries:
+          type: integer
+          format: int64
+        totalMetricDataPoints:
+          type: integer
+          format: int64
+        totalTraceSpans:
+          type: integer
+          format: int64
+        logEntriesByService:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        logEntriesByLevel:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        activeRetentionPolicies:
+          type: integer
+          format: int32
+        oldestLogEntry:
+          type: string
+          format: date-time
+        newestLogEntry:
+          type: string
+          format: date-time
